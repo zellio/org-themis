@@ -41,4 +41,38 @@
   :group 'applications
   :prefix "org-themis-")
 
+(defcustom org-themis-project-root "~/projects"
+  "Parent directory for `org-themis' projects"
+  :type 'string
+  :group 'org-themis)
+
+(defcustom org-themis-project-alist-file
+  (expand-file-name ".org-themis-project-alist" org-themis-project-root)
+  "`org-themis' project alist file"
+  :type 'string
+  :group 'org-themis)
+
+(defun org-themis--load-project-alist ()
+  ""
+  (if (file-exists-p org-themis-project-alist-file)
+	  (with-temp-buffer
+		(insert-file-contents org-themis-project-alist-file)
+		(read (current-buffer)))
+	'()))
+
+(defun org-themis--save-project-alist ()
+  ""
+  (with-temp-buffer
+    (insert
+     ";; Header"
+     (prin1-to-string org-themis-project-alist))
+    (write-file org-themis-project-alist-file nil)))
+
+(defvar org-themis-project-alist (org-themis--load-project-alist)
+  "")
+
+(defun org-themis--list-projects ()
+  ""
+  (mapcar #'car org-themis-project-alist))
+
 ;;; org-themis.el ends here
