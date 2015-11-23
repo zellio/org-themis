@@ -33,6 +33,8 @@
 
 ;;; Code:
 
+(require 'cl)
+
 (defconst org-themis-version "0.4.0"
   "`org-themis' version")
 
@@ -57,15 +59,29 @@
   (if (file-exists-p org-themis-project-alist-file)
       (with-temp-buffer
         (insert-file-contents org-themis-project-alist-file)
-        (read (current-buffer)))
+        (or (read (current-buffer)) '()))
     '()))
 
 (defun org-themis--save-project-alist ()
   ""
   (with-temp-buffer
     (insert
-     ";; Header"
-     (prin1-to-string org-themis-project-alist))
+     ";; -*- mode: lisp; coding: utf-8 -*-\n"
+     ";; Header\n"
+     "\n"
+     "(")
+    (dolist (project org-themis-project-alist)
+      (newline)
+      (insert " (" (prin1-to-string (car project)) "\n")
+      (dolist (arg (cdr project))
+        (insert "  " (prin1-to-string arg) "\n"))
+      (delete-char -1)
+      (insert ")"))
+    (insert ")")
+    (goto-char (point-min))
+    (forward-line 3)
+    (forward-char 1)
+    (delete-char 2)
     (write-file org-themis-project-alist-file nil)))
 
 (defvar org-themis-project-alist (org-themis--load-project-alist)
@@ -74,6 +90,11 @@
 (defun org-themis--list-projects ()
   ""
   (mapcar #'car org-themis-project-alist))
+
+(defun org-themis--completing-read-project-selector ()
+  (list
+   (intern
+    (completing-read "Project name: " (org-themis--list-projects)))))
 
 (defun org-themis--add-project (name root scratch journal)
   ""
@@ -107,13 +128,13 @@
 
 (defun org-themis-remove-project-interactive (name)
   ""
-  (interactive "SProject Name: ")
+  (interactive (org-themis--completing-read-project-selector))
   (org-themis--remove-project name))
 
-(defvar org-themis-project 'nil
+(defvar org-themis-project nil
   "")
 
-(defvar org-themis-project-data 'nil
+(defvar org-themis-project-data nil
   "")
 
 (defun org-themis-set-project (name data)
@@ -123,10 +144,7 @@
 
 (defun org-themis-set-project-interactive (name)
   ""
-  (interactive
-   (list
-    (intern
-     (completing-read "Project name: " (org-themis--list-projects)))))
+  (interactive (org-themis--completing-read-project-selector))
   (let ((data (assoc name org-themis-project-alist)))
     (if data
         (org-themis-set-project name data)
@@ -161,5 +179,41 @@
   ""
   (interactive)
   (org-themis-find-project-file (org-themis--project-scratch)))
+
+(defun org-themis--update-minor-mode-lighter ()
+  ""
+  (setcdr
+   (assoc 'org-themis-mode minor-mode-alist)
+   (list
+    (if org-themis-project
+        (format " ot:%s" org-themis-project)
+      " ot"))))
+
+(defvar org-themis-mode-map
+  (let ((map (make-sparse-keymap)))
+    (define-key map (kbd "C-c /") 'org-themis-find-project-file)
+    (define-key map (kbd "C-c !")
+      #'(lambda ()
+          (interactive)
+          (command-execute 'org-themis-set-project-interactive)
+          (org-themis--update-minor-mode-lighter)))
+    (define-key map (kbd "C-c +")
+      #'(lambda ()
+          (interactive)
+          (command-execute 'org-themis-add-project-interactive)
+          (org-themis--save-project-alist)))
+    (define-key map (kbd "C-c -")
+      #'(lambda ()
+          (interactive)
+          (command-execute 'org-themis-remove-project-interactive)
+          (org-themis--save-project-alist)))
+    map)
+  "Keymap for org-themis minor mode.")
+
+(define-minor-mode org-themis-mode
+  "Experimental project management extenions for org-mode"
+  :lighter " ot"
+  :keymap org-themis-mode-map
+  :group 'org-themis)
 
 ;;; org-themis.el ends here
