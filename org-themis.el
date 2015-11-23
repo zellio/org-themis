@@ -123,12 +123,43 @@
 
 (defun org-themis-set-project-interactive (name)
   ""
-  (interactive "SProject Name: ")
+  (interactive
+   (list
+    (intern
+     (completing-read "Project name: " (org-themis--list-projects)))))
   (let ((data (assoc name org-themis-project-alist)))
     (if data
-        (progn
-          (org-themis-set-project name data)
-          (messsage "Project set to %s" name))
+        (org-themis-set-project name data)
       (error "No project named %s found" name))))
+
+(dolist (tag '(name root scratch journal))
+  (eval
+   `(defun ,(intern (format "org-themis--project-%s" tag)) ()
+      ""
+      (cdr (assoc (quote ,tag) (cdr org-themis-project-data))))
+   ))
+
+(defun org-themis-find-project-file (&optional file)
+  ""
+  (interactive)
+  (let ((default-directory (format "%s/" (org-themis--project-root))))
+    (if file
+        (find-file (expand-file-name file default-directory))
+      (command-execute 'find-file))))
+
+(defun org-themis-find-project-root ()
+  ""
+  (interactive)
+  (org-themis-find-project-file "."))
+
+(defun org-themis-find-project-journal ()
+  ""
+  (interactive)
+  (org-themis-find-project-file (org-themis--project-journal)))
+
+(defun org-themis-find-project-scratch ()
+  ""
+  (interactive)
+  (org-themis-find-project-file (org-themis--project-scratch)))
 
 ;;; org-themis.el ends here
