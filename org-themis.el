@@ -43,7 +43,7 @@
   :group 'applications
   :prefix "org-themis-")
 
-(defcustom org-themis-project-root "~/projects"
+(defcustom org-themis-project-root (expand-file-name "projects" "~")
   "Parent directory for `org-themis' projects"
   :type 'string
   :group 'org-themis)
@@ -94,9 +94,41 @@
   (cdr (assoc 'meta org-themis-data))
   "")
 
+(defun org-themis--get-meta-value (label)
+  ""
+  (cdr (assoc label org-themis-meta-alist)))
+
+(defun org-themis--set-meta-value (label value)
+  ""
+  (let ((meta-pair (assoc label org-themis-meta-alist)))
+    (if meta-pair
+        (setcdr meta-pair value)
+      (setq
+       org-themis-meta-alist
+       (push (cons label value) org-themis-meta-alist)))))
+
 (defvar org-themis-project-alist
   (cdr (assoc 'projects org-themis-data))
   "")
+
+(defvar org-themis-project-data nil
+  "")
+
+(defvar org-themis-project
+  (let* ((project (org-themis--get-meta-value 'current-project))
+         (data (assoc project org-themis-project-alist)))
+    (when (and project data)
+      (setq org-themis-project project)
+      (setq org-themis-project-data data))
+    project)
+  "")
+
+(dolist (tag '(name root scratch journal))
+  (eval
+   `(defun ,(intern (format "org-themis--project-%s" tag)) ()
+      ""
+      (cdr (assoc (quote ,tag) (cdr org-themis-project-data))))
+   ))
 
 (defun org-themis--list-projects ()
   ""
@@ -106,6 +138,20 @@
   (list
    (intern
     (completing-read "Project name: " (org-themis--list-projects)))))
+
+(defun org-themis--set-project (name data)
+  ""
+  (setq org-themis-project name)
+  (setq org-themis-project-data data)
+  (org-themis--set-meta-value 'current-project name))
+
+(defun org-themis-set-project-interactive (name)
+  ""
+  (interactive (org-themis--completing-read-project-selector))
+  (let ((data (assoc name org-themis-project-alist)))
+    (if data
+        (org-themis--set-project name data)
+      (error "No project named %s found" name))))
 
 (defun org-themis--add-project (name root scratch journal)
   ""
@@ -142,52 +188,6 @@
   (interactive (org-themis--completing-read-project-selector))
   (org-themis--remove-project name))
 
-(defvar org-themis-project-data nil
-  "")
-
-(defun org-themis--set-meta-value (label value)
-  ""
-  (let ((meta-pair (assoc label org-themis-meta-alist)))
-    (if meta-pair
-        (setcdr meta-pair value)
-      (setq
-       org-themis-meta-alist
-       (push (cons label value) org-themis-meta-alist)))))
-
-(defun org-themis--get-meta-value (label)
-  ""
-  (cdr (assoc label org-themis-meta-alist)))
-
-(defvar org-themis-project
-  (let* ((project (org-themis--get-meta-value 'current-project))
-         (data (assoc project org-themis-project-alist)))
-    (when (and project data)
-      (setq org-themis-project project)
-      (setq org-themis-project-data data))
-    project)
-  "")
-
-(defun org-themis-set-project (name data)
-  ""
-  (setq org-themis-project name)
-  (setq org-themis-project-data data)
-  (org-themis--set-meta-value 'current-project name))
-
-(defun org-themis-set-project-interactive (name)
-  ""
-  (interactive (org-themis--completing-read-project-selector))
-  (let ((data (assoc name org-themis-project-alist)))
-    (if data
-        (org-themis-set-project name data)
-      (error "No project named %s found" name))))
-
-(dolist (tag '(name root scratch journal))
-  (eval
-   `(defun ,(intern (format "org-themis--project-%s" tag)) ()
-      ""
-      (cdr (assoc (quote ,tag) (cdr org-themis-project-data))))
-   ))
-
 (defun org-themis-find-project-file (&optional file)
   ""
   (interactive)
@@ -211,6 +211,11 @@
   (interactive)
   (org-themis-find-project-file (org-themis--project-scratch)))
 
+(defvar org-themis-minor-mode-lighter
+  (if org-themis-project
+      (format " ot:%s" org-themis-project)
+    " ot"))
+
 (defun org-themis--update-minor-mode-lighter ()
   ""
   (let ((lighter (if org-themis-project
@@ -220,11 +225,6 @@
     (setcdr
      (assoc 'org-themis-mode minor-mode-alist)
      (list lighter))))
-
-(defvar org-themis-minor-mode-lighter
-  (if org-themis-project
-      (format " ot:%s" org-themis-project)
-    " ot"))
 
 (defvar org-themis-mode-map
   (let ((map (make-sparse-keymap)))
