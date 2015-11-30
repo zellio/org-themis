@@ -1,12 +1,14 @@
-
-;;; org-themis.el --- Experimental project management extenions for org-mode
+;;; org-themis.el --- Experimental project management mode for org-mode
 
 ;; Copyright (C) 2015 Zachary Elliott
 ;;
 ;; Authors: Zachary Elliott <contact@zell.io>
+;; Maintainer: Zachary Elliott <contact@zell.io>
 ;; URL: http://github.com/zellio/org-themis
+;; Created: 30th November 2015
 ;; Version: 0.4.0
 ;; Keywords: org-mode, elisp, project
+;; Package-Requires: ((cl-lib "0.4"))
 
 ;; This file is not part of GNU Emacs.
 
@@ -33,7 +35,7 @@
 
 ;;; Code:
 
-(require 'cl)
+(require 'cl-lib)
 
 (defconst org-themis-version "0.4.0"
   "`org-themis' version")
