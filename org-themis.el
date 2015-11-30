@@ -38,7 +38,7 @@
 (require 'cl-lib)
 
 (defconst org-themis-version "0.4.0"
-  "`org-themis' version")
+  "`org-themis' version.")
 
 (defgroup org-themis nil
   "org-themis application group"
@@ -46,13 +46,13 @@
   :prefix "org-themis-")
 
 (defcustom org-themis-project-root (expand-file-name "projects" "~")
-  "Parent directory for `org-themis' projects"
+  "Parent directory for `org-themis' projects."
   :type 'string
   :group 'org-themis)
 
 (defcustom org-themis-data-file
   (expand-file-name ".org-themis.dat" org-themis-project-root)
-  "`org-themis' projects data file"
+  "`org-themis' projects data file."
   :type 'string
   :group 'org-themis)
 
