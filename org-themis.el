@@ -251,9 +251,11 @@
   "Keymap for org-themis minor mode.")
 
 (define-minor-mode org-themis-mode
-  "Experimental project management extenions for org-mode"
+  "Experimental project management mode for org-mode"
   :lighter org-themis-minor-mode-lighter
   :keymap org-themis-mode-map
   :group 'org-themis)
+
+(provide 'org-themis)
 
 ;;; org-themis.el ends here
