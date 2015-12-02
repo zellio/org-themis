@@ -90,11 +90,11 @@
     (write-file org-themis-data-file nil)))
 
 (defvar org-themis-data (org-themis--load-data)
-  "")
+  "Master operational structure for `org-themis'.")
 
 (defvar org-themis-meta-alist
   (cdr (assoc 'meta org-themis-data))
-  "")
+  "Settings alist derived from `org-themis-data'.")
 
 (defun org-themis--get-meta-value (label)
   ""
@@ -111,10 +111,10 @@
 
 (defvar org-themis-project-alist
   (cdr (assoc 'projects org-themis-data))
-  "")
+  "Project alist derived from `org-themis-data'.")
 
 (defvar org-themis-project-data nil
-  "")
+  "Current project data for `org-themis'.")
 
 (defvar org-themis-project
   (let* ((project (org-themis--get-meta-value 'current-project))
@@ -123,7 +123,7 @@
       (setq org-themis-project project)
       (setq org-themis-project-data data))
     project)
-  "")
+  "Symbolic name of current `org-themis' project.")
 
 (dolist (tag '(name root scratch journal))
   (eval
@@ -137,6 +137,7 @@
   (mapcar #'car org-themis-project-alist))
 
 (defun org-themis--completing-read-project-selector ()
+  ""
   (list
    (intern
     (completing-read "Project name: " (org-themis--list-projects)))))
@@ -148,7 +149,15 @@
   (org-themis--set-meta-value 'current-project name))
 
 (defun org-themis-set-project-interactive (name)
-  ""
+  "Set the current `org-themis' project to valid project.
+
+Uses list of projects for completing read call to set the current
+project.  This updates the `org-themis-project' and
+`org-themis-project-data'.
+
+Example:
+
+    (org-themis-set-project-interactive NAME)"
   (interactive (org-themis--completing-read-project-selector))
   (let ((data (assoc name org-themis-project-alist)))
     (if data
