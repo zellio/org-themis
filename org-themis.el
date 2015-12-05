@@ -166,6 +166,13 @@ Example:
         (org-themis--set-project name data)
       (error "No project named %s found" name))))
 
+(defun org-themis-set-project ()
+  ""
+  (interactive)
+  (command-execute 'org-themis-set-project-interactive)
+  (org-themis--update-minor-mode-lighter)
+  (org-themis--save-data))
+
 (defun org-themis--add-project (name root scratch journal)
   ""
   (push
@@ -188,6 +195,12 @@ Example:
        "journal.org")
     (error "Name %s already in use" name)))
 
+(defun org-themis-add-project ()
+  ""
+  (interactive)
+  (command-execute 'org-themis-add-project-interactive)
+  (org-themis--save-data))
+
 (defun org-themis--remove-project (name)
   ""
   (setq
@@ -200,6 +213,12 @@ Example:
   ""
   (interactive (org-themis--completing-read-project-selector))
   (org-themis--remove-project name))
+
+(defun org-themis-remove-project ()
+  ""
+  (interactive)
+  (command-execute 'org-themis-remove-project-interactive)
+  (org-themis--save-data))
 
 (defun org-themis-find-project-file (&optional file)
   ""
@@ -242,22 +261,9 @@ Example:
 (defvar org-themis-mode-map
   (let ((map (make-sparse-keymap)))
     (define-key map (kbd "C-c /") 'org-themis-find-project-file)
-    (define-key map (kbd "C-c !")
-      #'(lambda ()
-          (interactive)
-          (command-execute 'org-themis-set-project-interactive)
-          (org-themis--update-minor-mode-lighter)
-          (org-themis--save-data)))
-    (define-key map (kbd "C-c +")
-      #'(lambda ()
-          (interactive)
-          (command-execute 'org-themis-add-project-interactive)
-          (org-themis--save-data)))
-    (define-key map (kbd "C-c -")
-      #'(lambda ()
-          (interactive)
-          (command-execute 'org-themis-remove-project-interactive)
-          (org-themis--save-data)))
+    (define-key map (kbd "C-c !") 'org-themis-set-project)
+    (define-key map (kbd "C-c +") 'org-themis-add-project)
+    (define-key map (kbd "C-c -") 'org-themis-remove-project)
     map)
   "Keymap for org-themis minor mode.")
 
