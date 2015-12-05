@@ -5,7 +5,7 @@
 ;; Authors: Zachary Elliott <contact@zell.io>
 ;; Maintainer: Zachary Elliott <contact@zell.io>
 ;; URL: http://github.com/zellio/org-themis
-;; Created: 30th November 2015
+;; Created: 2015-11-20
 ;; Version: 0.4.0
 ;; Keywords: org-mode, elisp, project
 ;; Package-Requires: ((cl-lib "0.4"))
@@ -43,6 +43,8 @@
 (defgroup org-themis nil
   "org-themis application group"
   :group 'applications
+  :link '(url-link :tag "Website for org-themis"
+				   "https://github.com/zellio/org-themis")
   :prefix "org-themis-")
 
 (defcustom org-themis-project-root (expand-file-name "projects" "~")
@@ -259,11 +261,22 @@ Example:
     map)
   "Keymap for org-themis minor mode.")
 
+;;;###autoload
 (define-minor-mode org-themis-mode
   "Experimental project management mode for org-mode"
   :lighter org-themis-minor-mode-lighter
   :keymap org-themis-mode-map
   :group 'org-themis)
+
+;;;###autoload
+(defun org-themis-mode-enable ()
+  "Enable `org-themis-mode'."
+  (org-themis-mode 1))
+
+;;;###autoload
+(defun org-themis-mode-disable ()
+  "Disable `org-themis-mode'."
+  (org-themis-mode 0))
 
 (provide 'org-themis)
 
