@@ -61,7 +61,7 @@ methods."
   "`org-themis' data file.
 
 The file contains the internal configurations for `org-themis' as
-well as the project database.  I would recomend either putting it
+well as the project database.  I would recommend either putting it
 in a place where it is backed up or NOT EDITING IT BY HAND."
   :type 'string
   :group 'org-themis)
