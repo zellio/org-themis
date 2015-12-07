@@ -41,33 +41,41 @@
   "`org-themis' version.")
 
 (defgroup org-themis nil
-  "org-themis application group"
+  "`org-themis' application group."
   :group 'applications
   :link '(url-link :tag "Website for org-themis"
-				   "https://github.com/zellio/org-themis")
+                   "https://github.com/zellio/org-themis")
   :prefix "org-themis-")
 
 (defcustom org-themis-project-root (expand-file-name "projects" "~")
-  "Parent directory for `org-themis' projects."
+  "Parent directory for `org-themis' projects.
+
+This is used for automated project generation in
+`org-themis-add-project' and `org-themis-generate-project'
+methods."
   :type 'string
   :group 'org-themis)
 
 (defcustom org-themis-data-file
   (expand-file-name ".org-themis.dat" org-themis-project-root)
-  "`org-themis' projects data file."
+  "`org-themis' data file.
+
+The file contains the internal configurations for `org-themis' as
+well as the project database.  I would recomend either putting it
+in a place where it is backed up or NOT EDITING IT BY HAND."
   :type 'string
   :group 'org-themis)
 
 (defun org-themis--load-data ()
-  ""
+  "Unmarshal operational data from the `org-themis-data-file'."
   (if (file-exists-p org-themis-data-file)
       (with-temp-buffer
         (insert-file-contents org-themis-data-file)
-        (or (read (current-buffer)) '()))
+        (read (current-buffer)))
     '()))
 
 (defun org-themis--save-data ()
-  ""
+  "Marshal operational data to the `org-themis-data-file'."
   (with-temp-buffer
     (insert
      ";; -*- mode: lisp; coding: utf-8 -*-\n"
@@ -92,18 +100,18 @@
     (write-file org-themis-data-file nil)))
 
 (defvar org-themis-data (org-themis--load-data)
-  "Master operational structure for `org-themis'.")
+  "Internal operational data-structure for `org-themis'.")
 
 (defvar org-themis-meta-alist
   (cdr (assoc 'meta org-themis-data))
   "Settings alist derived from `org-themis-data'.")
 
 (defun org-themis--get-meta-value (label)
-  ""
+  "Get, by LABEL, a VALUE from the `org-themis-meta-alist'."
   (cdr (assoc label org-themis-meta-alist)))
 
 (defun org-themis--set-meta-value (label value)
-  ""
+  "Set, by LABEL, a VALUE from the `org-themis-meta-alist'."
   (let ((meta-pair (assoc label org-themis-meta-alist)))
     (if meta-pair
         (setcdr meta-pair value)
@@ -116,7 +124,10 @@
   "Project alist derived from `org-themis-data'.")
 
 (defvar org-themis-project-data nil
-  "Current project data for `org-themis'.")
+  "Operational data for the current `org-themis' project.
+
+Set the `org-themis--add-project' method for more information
+what that data looks like.")
 
 (defvar org-themis-project
   (let* ((project (org-themis--get-meta-value 'current-project))
@@ -130,22 +141,30 @@
 (dolist (tag '(name root scratch journal))
   (eval
    `(defun ,(intern (format "org-themis--project-%s" tag)) ()
-      ""
+      ,(format "Auto generated accessor method for the %s value." tag)
       (cdr (assoc (quote ,tag) (cdr org-themis-project-data))))
    ))
 
 (defun org-themis--list-projects ()
-  ""
+  "List of known `org-themis' projects.
+
+This value is not cached."
   (mapcar #'car org-themis-project-alist))
 
 (defun org-themis--completing-read-project-selector ()
-  ""
+  "Completing read from the `org-themis' project list.
+
+Value is interned and returned as a symbol."
   (list
    (intern
     (completing-read "Project name: " (org-themis--list-projects)))))
 
 (defun org-themis--set-project (name data)
-  ""
+  "Set the current `org-themis' project NAME and DATA.
+
+This method does not validate that it has been passed a valid
+project.  It just sets the values directly and updates the
+`org-themis-meta-alist' value."
   (setq org-themis-project name)
   (setq org-themis-project-data data)
   (org-themis--set-meta-value 'current-project name))
@@ -155,7 +174,8 @@
 
 Uses list of projects for completing read call to set the current
 project.  This updates the `org-themis-project' and
-`org-themis-project-data'.
+`org-themis-project-data'.  This function validates the NAME
+value and then uses the `org-themis--set-project' method.
 
 Example:
 
@@ -167,14 +187,18 @@ Example:
       (error "No project named %s found" name))))
 
 (defun org-themis-set-project ()
-  ""
+  "Wrapper around the `org-themis-set-project-interactive' method.
+
+This method exists so that `org-themis-mode-map' has pretty
+names.  This method sets the project, updates the minor mode
+lighter, and writes the `org-themis-data-file'."
   (interactive)
   (command-execute 'org-themis-set-project-interactive)
   (org-themis--update-minor-mode-lighter)
   (org-themis--save-data))
 
 (defun org-themis--add-project (name root scratch journal)
-  ""
+  "Add a project alist to the `org-themis-project-alist'."
   (push
    (cons name
          (list
@@ -185,7 +209,15 @@ Example:
    org-themis-project-alist))
 
 (defun org-themis-add-project-interactive (name)
-  ""
+  "Add a valid project alist the `org-themis-alist'.
+
+This methods ensures that NAME is not already a project.
+Additionally it generates default values.
+
+Defaults:
+ ROOT: Defaults to `org-themis-project-root'/NAME
+ SCRATCH: scratch.org
+ JOURNAL: journal.org"
   (interactive "SProject Name: ")
   (if (null (assoc name org-themis-project-alist))
       (org-themis--add-project
@@ -196,13 +228,17 @@ Example:
     (error "Name %s already in use" name)))
 
 (defun org-themis-add-project ()
-  ""
+  "Wrapper around the `org-themis-add-project-interactive' method.
+
+This method exists so that `org-themis-mode-map' has pretty
+names.  This method adds a new project and writes the
+`org-themis-data-file'."
   (interactive)
   (command-execute 'org-themis-add-project-interactive)
   (org-themis--save-data))
 
 (defun org-themis--remove-project (name)
-  ""
+  "Remove a project alist by NAME from `org-themis-project-alist'."
   (setq
    org-themis-project-alist
    (remove-if
@@ -210,18 +246,26 @@ Example:
     org-themis-project-alist)))
 
 (defun org-themis-remove-project-interactive (name)
-  ""
+  "Remove a project alist by NAME from `org-themis-project-alist'."
   (interactive (org-themis--completing-read-project-selector))
   (org-themis--remove-project name))
 
 (defun org-themis-remove-project ()
-  ""
+  "Wrapper around `org-themis-remove-project-interactive'.
+
+This method exists so that `org-themis-mode-map' has pretty
+names.  This method removes a project and writes the
+`org-themis-data-file'."
   (interactive)
   (command-execute 'org-themis-remove-project-interactive)
   (org-themis--save-data))
 
 (defun org-themis-find-project-file (&optional file)
-  ""
+  "Run the find-file function within an `org-themis' project.
+
+If the value FILE is provided it is assumed to be located at the
+current project root.  Otherwise a file is searched for starting
+at the current project root."
   (interactive)
   (let ((default-directory (format "%s/" (org-themis--project-root))))
     (if file
@@ -229,27 +273,31 @@ Example:
       (command-execute 'find-file))))
 
 (defun org-themis-find-project-root ()
-  ""
+  "Method open the current project root."
   (interactive)
   (org-themis-find-project-file "."))
 
 (defun org-themis-find-project-journal ()
-  ""
+  "Method open the current project journal."
   (interactive)
   (org-themis-find-project-file (org-themis--project-journal)))
 
 (defun org-themis-find-project-scratch ()
-  ""
+  "Method open the current project scratch."
   (interactive)
   (org-themis-find-project-file (org-themis--project-scratch)))
 
 (defvar org-themis-minor-mode-lighter
   (if org-themis-project
       (format " ot:%s" org-themis-project)
-    " ot"))
+    " ot")
+  "Current `org-themis' minor mode lighter.
+
+Facilitates tracking and auotmatic updating of the lighter for
+project changes.")
 
 (defun org-themis--update-minor-mode-lighter ()
-  ""
+  "Update the minor mode lighter to reflect the current project."
   (let ((lighter (if org-themis-project
                      (format " ot:%s" org-themis-project)
                    " ot")))
@@ -265,11 +313,11 @@ Example:
     (define-key map (kbd "C-c +") 'org-themis-add-project)
     (define-key map (kbd "C-c -") 'org-themis-remove-project)
     map)
-  "Keymap for org-themis minor mode.")
+  "Keymap for `org-themis' minor mode.")
 
 ;;;###autoload
 (define-minor-mode org-themis-mode
-  "Experimental project management mode for org-mode"
+  "Experimental project management mode for `org-mode'"
   :lighter org-themis-minor-mode-lighter
   :keymap org-themis-mode-map
   :group 'org-themis)
