@@ -6,7 +6,7 @@
 ;; Maintainer: Zachary Elliott <contact@zell.io>
 ;; URL: http://github.com/zellio/org-themis
 ;; Created: 2015-11-20
-;; Version: 0.4.0
+;; Version: 0.4.1
 ;; Keywords: org-mode, elisp, project
 ;; Package-Requires: ((cl-lib "0.4"))
 
@@ -37,7 +37,7 @@
 
 (require 'cl-lib)
 
-(defconst org-themis-version "0.4.0"
+(defconst org-themis-version "0.4.1"
   "`org-themis' version.")
 
 (defgroup org-themis nil
