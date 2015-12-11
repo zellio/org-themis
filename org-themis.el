@@ -241,7 +241,7 @@ names.  This method adds a new project and writes the
   "Remove a project alist by NAME from `org-themis-project-alist'."
   (setq
    org-themis-project-alist
-   (remove-if
+   (cl-remove-if
     (lambda (x) (eql name (car x)))
     org-themis-project-alist)))
 
