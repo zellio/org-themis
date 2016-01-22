@@ -322,16 +322,6 @@ project changes.")
   :keymap org-themis-mode-map
   :group 'org-themis)
 
-;;;###autoload
-(defun org-themis-mode-enable ()
-  "Enable `org-themis-mode'."
-  (org-themis-mode 1))
-
-;;;###autoload
-(defun org-themis-mode-disable ()
-  "Disable `org-themis-mode'."
-  (org-themis-mode 0))
-
 (provide 'org-themis)
 
 ;;; org-themis.el ends here
